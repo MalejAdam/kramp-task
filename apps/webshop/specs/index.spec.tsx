@@ -13,7 +13,9 @@ jest.mock('next/router', () => ({
 describe('Index', () => {
   it('should render successfully', () => {
     const { default: HomePage } = require('../src/pages/index');
-    const { baseElement } = render(<HomePage featured={[]} timestamp={Date.now()} />);
+    const { baseElement } = render(
+      <HomePage featured={[]} generatedAt={new Date('2024-01-01T10:00:00.000Z').toISOString()} />
+    );
     expect(baseElement).toBeTruthy();
   });
 });

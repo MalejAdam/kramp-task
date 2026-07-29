@@ -1,14 +1,13 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import ProductCard from '../src/components/ProductCard';
+import { formatPrice } from '../src/utils/formatPrice';
 
-jest.mock('next/router', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    pathname: '/',
-    query: {},
-    asPath: '/',
-  }),
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 
 const mockProduct = {
@@ -30,7 +29,7 @@ describe('ProductCard', () => {
 
   it('displays the correct price', () => {
     const { getByTestId } = render(<ProductCard product={mockProduct} />);
-    expect(getByTestId('product-price').innerHTML).toBe('€18.99');
+    expect(getByTestId('product-price').textContent).toBe(formatPrice(mockProduct.price));
   });
 
   it('renders the product name', () => {
