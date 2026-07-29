@@ -72,6 +72,10 @@ builder.queryType({
         ids: t.arg.idList({ required: true }),
       },
       resolve: async (_root, args) => {
+        const MAX_IDS = 50;
+        if (args.ids.length > MAX_IDS) {
+          throw new Error(`Too many ids requested (max ${MAX_IDS}).`);
+        }
         const results: Product[] = [];
         for (const id of args.ids) {
           await new Promise(r => setTimeout(r, 800));
