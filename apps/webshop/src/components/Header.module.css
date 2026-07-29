@@ -66,9 +66,37 @@
   border-color: #e63329;
 }
 
-.truncatedHint {
-  display: block;
+.searchHint {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 11px;
   color: #999;
-  margin-top: 2px;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .inner {
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    padding: 12px 16px;
+  }
+
+  .logo {
+    margin-right: auto;
+  }
+
+  .searchWrapper {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .nav {
+    order: 4;
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
 }
