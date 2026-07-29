@@ -38,6 +38,8 @@
   font-size: 13px;
   cursor: pointer;
   border-radius: 2px;
+  text-decoration: none;
+  border: none;
 }
 
 .button:hover {
