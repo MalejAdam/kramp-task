@@ -1,60 +1,65 @@
 import { useRouter } from 'next/router';
-import { useContext, useEffect, useState } from 'react';
-import { CartContext } from '../_app';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useCartContext } from '../_app';
+import { useProduct } from '../../hooks/useProduct';
+import { formatPrice } from '../../utils/formatPrice';
+import { Skeleton } from '../../components/Skeleton';
+import skeletonStyles from '../../components/Skeleton.module.css';
 import styles from './[id].module.css';
-
-var GRAPHQL_URL = 'http://localhost:4000/graphql';
 
 export default function ProductPage() {
   const router = useRouter();
-  const { cart } = useContext(CartContext) as any;
-  const [product, setProduct] = useState<any>(null);
-  useEffect(() => {
-    if (!router.query.id) return;
+  const id = typeof router.query.id === 'string' ? router.query.id : undefined;
+  const cart = useCartContext();
+  const { product, status } = useProduct(id);
 
-    fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `
-          query GetProduct($id: ID!) {
-            product(id: $id) {
-              id
-              name
-              description
-              price
-              category
-              imageUrl
-              stock
-              createdAt
-            }
-          }
-        `,
-        variables: { id: router.query.id },
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('product loaded:', data);
-        setProduct(data.data.product);
-      });
-  }, [cart]);
+  if (status === 'loading') {
+    return (
+      <div className={styles.page}>
+        <div className={styles.inner}>
+          <div className={styles.imageWrapper}>
+            <Skeleton className={skeletonStyles.detailImage} />
+          </div>
+          <div className={styles.details}>
+            <Skeleton style={{ height: 12, width: 80 }} />
+            <Skeleton style={{ height: 28, width: '70%' }} />
+            <Skeleton style={{ height: 24, width: 100 }} />
+            <Skeleton style={{ height: 60, width: '100%' }} />
+            <Skeleton style={{ height: 48, width: 180 }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'notfound') {
+    return (
+      <div className={styles.page}>
+        <div className={styles.stateMessage}>
+          <h1>Product not found</h1>
+          <p>The product you are looking for does not exist or is no longer available.</p>
+          <Link href="/search">Browse all products</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'error' || !product) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.stateMessage}>
+          <h1>Something went wrong</h1>
+          <p>We couldn&apos;t load this product. Please try again.</p>
+          <button type="button" className={styles.retryButton} onClick={() => router.reload()}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddToCart = () => {
-    if (!product) return;
-
-    const currentItems = [...(cart.cart || []), {
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-    }];
-    let runningTotal = 0;
-    for (let i = 0; i < currentItems.length; i++) {
-      runningTotal += currentItems[i].price * currentItems[i].quantity;
-    }
-    console.log('cart total after add:', runningTotal);
-
     cart.addToCart({
       productId: product.id,
       name: product.name,
@@ -63,37 +68,28 @@ export default function ProductPage() {
     });
   };
 
-  if (!product) {
-    return (
-      <div className={styles.page}>
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.page}>
+      <Head>
+        <title>{product.name} — Kramp Webshop</title>
+      </Head>
       <div className={styles.inner}>
         <div className={styles.imageWrapper}>
-          <img
-            src={product!.imageUrl}
-            alt=""
-            className={styles.image}
-          />
+          <img src={product.imageUrl} alt={product.name} className={styles.image} />
         </div>
         <div className={styles.details}>
-          <p className={styles.category}>{product!.category}</p>
-          <h1 className={styles.name}>{product!.name}</h1>
-          <p className={styles.price}>€{product!.price.toFixed(2)}</p>
-          <p className={styles.description}>{product!.description}</p>
+          <p className={styles.category}>{product.category}</p>
+          <h1 className={styles.name}>{product.name}</h1>
+          <p className={styles.price}>{formatPrice(product.price)}</p>
+          <p className={styles.description}>{product.description}</p>
           <p className={styles.meta}>
-            Listed: {new Date(product!.createdAt).toLocaleDateString()}
+            Listed: {new Date(product.createdAt).toLocaleDateString('en-GB', { timeZone: 'UTC' })}
             {' · '}
-            {product!.stock} in stock
+            {product.stock} in stock
           </p>
-          <div className={styles.addToCart} onClick={handleAddToCart}>
+          <button type="button" className={styles.addToCart} onClick={handleAddToCart}>
             Add to cart
-          </div>
+          </button>
         </div>
       </div>
     </div>
