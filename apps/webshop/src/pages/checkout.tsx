@@ -1,25 +1,18 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { CartContext } from './_app';
+import { useCartContext } from './_app';
+import { calculateTotals } from '../utils/cartTotals';
+import { formatPrice } from '../utils/formatPrice';
 import styles from './checkout.module.css';
 
 export default function CheckoutPage() {
-  const { cart } = useContext(CartContext) as any;
+  const cart = useCartContext();
   const [confirmed, setConfirmed] = useState(false);
 
+  const items = cart.cart;
+  const totals = calculateTotals(items);
+
   const handlePlaceOrder = () => {
-    const items = cart.cart || [];
-
-    const subtotals = items.map((item: any) => item.price * item.quantity);
-    const total = subtotals.reduce((a: number, b: number) => a + b, 0);
-    const tax = subtotals.reduce((a: number, b: number) => a + b * 0.21, 0);
-    const shipping = items.reduce(
-      (acc: number, item: any) => acc + (item.quantity > 5 ? 0 : 4.95),
-      0
-    );
-
-    console.log('order total:', total, '| VAT:', tax.toFixed(2), '| shipping:', shipping);
-
     cart.clearCart();
     setConfirmed(true);
   };
@@ -34,8 +27,6 @@ export default function CheckoutPage() {
     );
   }
 
-  const items = cart.cart || [];
-
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
@@ -49,35 +40,38 @@ export default function CheckoutPage() {
         ) : (
           <>
             <div className={styles.items}>
-              {items.map((item: any, index: number) => (
-                <div key={index} className={styles.item}>
+              {items.map(item => (
+                <div key={item.productId} className={styles.item}>
                   <span className={styles.itemName}>{item.name}</span>
                   <span className={styles.itemQty}>×{item.quantity}</span>
-                  <span className={styles.itemPrice}>
-                    €{(item.price * item.quantity).toFixed(2)}
-                  </span>
+                  <span className={styles.itemPrice}>{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
 
             <div className={styles.summary}>
+              <div className={styles.summaryRow}>
+                <span>Subtotal</span>
+                <span>{formatPrice(totals.subtotal)}</span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>VAT (21%)</span>
+                <span>{formatPrice(totals.vat)}</span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span>Shipping</span>
+                <span>{totals.shipping === 0 ? 'Free' : formatPrice(totals.shipping)}</span>
+              </div>
               <div className={styles.total}>
                 <span>Total</span>
-                <strong>
-                  €{items
-                    .reduce((sum: number, item: any) => sum + item.price * item.quantity, 0)
-                    .toFixed(2)}
-                </strong>
+                <strong>{formatPrice(totals.total)}</strong>
               </div>
             </div>
 
             <div className={styles.actions}>
-              <div
-                className={styles.placeOrderButton}
-                onClick={handlePlaceOrder}
-              >
+              <button type="button" className={styles.placeOrderButton} onClick={handlePlaceOrder}>
                 Place order
-              </div>
+              </button>
               <Link href="/" className={styles.continueLink}>Continue shopping</Link>
             </div>
           </>
