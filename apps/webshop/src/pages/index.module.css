@@ -1,27 +1,38 @@
 .hero {
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  background: #e63329;
 }
 
-.heroImage {
-  width: 100%;
-  height: 400px;
-  object-fit: cover;
-  display: block;
+.heroBrand {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 24px;
+  color: #fff;
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  text-align: center;
 }
 
 .heroContent {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  z-index: 1;
   padding: 32px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
   color: white;
 }
 
 .heroTitle {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
   margin: 0 0 8px;
 }
@@ -94,4 +105,40 @@
 .categoryCard:hover {
   background: #e63329;
   color: white;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    min-height: 320px;
+  }
+
+  .heroBrand {
+    font-size: 36px;
+  }
+
+  .heroTitle {
+    font-size: 22px;
+  }
+
+  .heroContent {
+    padding: 20px;
+  }
+
+  .grid,
+  .categoryGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .featuredHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
 }
