@@ -1,51 +1,56 @@
-import { useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CartItem } from '../types';
 
-const stored: CartItem[] =
-  typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem('cart') || '[]')
-    : [];
+const STORAGE_KEY = 'cart';
+
+function readStoredCart(): CartItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
 
 export function useCart() {
-  const [cart, setCart] = useState<CartItem[]>(stored);
-  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    setTotalPrice(total);
-  }, [cart]);
+    setCart(readStoredCart());
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('cart', JSON.stringify(cart));
-    }
-  });
+    if (!hydrated) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+  }, [cart, hydrated]);
 
-  const addToCart = (item: Omit<CartItem, 'productId'> & { productId: string }) => {
-    const id = uuidv4();
-    console.log('adding to cart, entry id:', id);
-
+  const addToCart = useCallback((item: CartItem) => {
     setCart(prev => {
       const existing = prev.find(i => i.productId === item.productId);
       if (existing) {
         return prev.map(i =>
-          i.productId === item.productId ? { ...i, quantity: i.quantity + 1 } : i
+          i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i
         );
       }
       return [...prev, { ...item }];
     });
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     setCart(prev => prev.filter(i => i.productId !== productId));
-  };
+  }, []);
 
-  const clearCart = () => {
-    setCart([]);
-  };
+  const clearCart = useCallback(() => setCart([]), []);
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
+  const totalPrice = useMemo(
+    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cart]
+  );
 
   return { cart, addToCart, removeFromCart, clearCart, totalItems, totalPrice };
 }
+
+export type UseCart = ReturnType<typeof useCart>;
